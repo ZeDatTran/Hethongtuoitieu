@@ -6,6 +6,9 @@ import joblib
 from datetime import datetime
 import threading
 import time
+import pandas as pd
+from skopt import gp_minimize
+from skopt.space import Real
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///irrigation.db'
@@ -16,18 +19,25 @@ bcrypt = Bcrypt(app)
 
 # Thông tin Adafruit IO
 AIO_USERNAME = "dadanganh"
-AIO_KEY = "aio_MprK98xPGjMIUXq8zI9HXJh5g44X"
+AIO_KEY = "aio_utKK49NRcofbGeGjPDFTUB5P7fz0"
 AIO_HEADERS = {'X-AIO-Key': AIO_KEY}
 
+# Load mô hình và các tệp hỗ trợ
 try:
-    model = joblib.load('rf_model.pkl')
-    print("Đã tải mô hình Random Forest thành công")
-except FileNotFoundError:
-    print("Không tìm thấy file rf_model.pkl. Vui lòng tạo mô hình trước!")
+    model = joblib.load("water_model.pkl")
+    scaler = joblib.load("scaler.pkl")
+    encoder_soil = joblib.load("encoder_soil.pkl")
+    encoder_crop = joblib.load("encoder_crop.pkl")
+    print("Đã tải mô hình và các tệp hỗ trợ thành công")
+except FileNotFoundError as e:
+    print(f"Không tìm thấy file: {e}. Vui lòng kiểm tra các file mô hình!")
     model = None
 except Exception as e:
-    print("Lỗi khi tải rf_model.pkl:", str(e))
+    print(f"Lỗi khi tải mô hình hoặc tệp hỗ trợ: {e}")
     model = None
+
+# Tên cột đúng khi train mô hình
+feature_columns = ["Temparature", "Humidity", "Moisture", "SoilType", "CropType"]
 
 # Mô hình User
 class User(db.Model):
@@ -168,38 +178,54 @@ def pump_state():
 def predict():
     if model is None:
         print("Mô hình học máy không khả dụng trong predict")
-        return jsonify({'error': 'Mô hình học máy không khả dụng. Vui lòng tạo rf_model.pkl'})
+        return jsonify({'error': 'Mô hình học máy không khả dụng. Vui lòng kiểm tra water_model.pkl'})
     try:
-        temp = float(request.form['temperature'])
-        pressure = float(request.form['pressure'])
-        altitude = float(request.form['altitude'])
-        input_data = [[temp, pressure, altitude]]
-        predicted_moisture = model.predict(input_data)[0]
-        
-        scaled_moisture = (predicted_moisture - 157) * 100 / (466 - 157)
-        if scaled_moisture < 0: scaled_moisture = 0
-        if scaled_moisture > 100: scaled_moisture = 100
+        # Lấy dữ liệu JSON từ yêu cầu POST
+        data = request.get_json()
+        print(f"Received data: {data}")
 
-        water_amount = 0
-        if scaled_moisture < 40:
-            water_amount = 50
-            result = f"Very Dry - Tưới {water_amount} lít"
-        elif scaled_moisture < 60:
-            water_amount = 20
-            result = f"Dry - Tưới {water_amount} lít"
-        else:
-            water_amount = 0
-            result = f"Wet/Very Wet - Tưới {water_amount} lít"
+        # Chuyển đổi dữ liệu sang DataFrame
+        input_data = pd.DataFrame([data])
 
-        send_feed_data('relaycontrol', str(water_amount))
-        print(f"Dự đoán: {result}")
-        return jsonify({'moisture': scaled_moisture, 'result': result, 'water_amount': water_amount})
-    except ValueError as e:
-        print("Lỗi dữ liệu đầu vào trong predict:", str(e))
-        return jsonify({'error': 'Dữ liệu nhập vào không hợp lệ'})
+        # Mã hóa loại đất và loại cây
+        input_data["SoilType"] = encoder_soil.transform(input_data["SoilType"])
+        input_data["CropType"] = encoder_crop.transform(input_data["CropType"])
+
+        # Chuẩn hóa dữ liệu số
+        input_data[["Temparature", "Humidity", "Moisture"]] = \
+            scaler.transform(input_data[["Temparature", "Humidity", "Moisture"]])
+
+        # Đảm bảo đúng thứ tự cột
+        input_water = input_data[feature_columns]
+
+        # Dự đoán bằng mô hình
+        predicted_water = model.predict(input_water)[0]      
+
+        # Tối ưu lượng nước bằng Bayesian Optimization
+        space = [Real(0.5 * predicted_water, 1.5 * predicted_water, name="WaterAmount")]
+
+        def water_usage_objective(water_amount):
+            return abs(water_amount[0] - predicted_water)
+
+        result = gp_minimize(water_usage_objective, space, n_calls=10, random_state=42)
+        optimized_water = result.x[0]
+
+        print(f"Predicted Water Usage: {predicted_water} ml/m2")
+        print(f"Optimized Water Usage: {optimized_water} ml/m2")
+
+        # Gửi dữ liệu tới Adafruit IO
+        send_feed_data('relaycontrol', str(optimized_water))
+
+        # Tạo phản hồi JSON
+        response_data = {
+            "PredictedWaterUsage": predicted_water,
+            "OptimizedWaterUsage": optimized_water
+        }
+        return jsonify(response_data)
+
     except Exception as e:
-        print("Lỗi trong predict:", str(e))
-        return jsonify({'error': str(e)})
+        print(f"Error in predict: {e}")
+        return jsonify({'error': str(e)}), 400
 
 @app.route('/schedule', methods=['POST'])
 @login_required

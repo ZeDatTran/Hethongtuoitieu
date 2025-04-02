@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Hệ Thống Tưới Tiêu</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h1>Hệ Thống Tưới Tiêu</h1>
+
+        <div class="dashboard">
+            <div class="card">
+              <h3>Nhiệt độ</h3>
+             <h3> <span id="temperature">Đang tải...</span></h3>
+            </div>
+            <div class="card">
+              <h3>Độ ẩm không khí</h3>
+             <h3><span id="humidity">Đang tải...</span></h3> 
+            </div>
+            <div class="card">
+              <h3>Độ ẩm đất</h3>
+             <h3><span id="soilmoisture">Đang tải... </span></h3> 
+            </div>
+        </div>
+
+        <div class="section">
+            <h2><i class="fas fa-water"></i> Điều khiển bơm</h2>
+            <label class="switch">
+                <input type="checkbox" id="pump_switch" onchange="togglePump(this.checked)">
+                <span class="slider"></span>
+            </label>
+        </div>
+
+        <div class="section">
+            <h2><i class="fas fa-bullseye"></i> Mục tiêu độ ẩm đất (%)</h2>
+            <label for="soil_min">Độ ẩm tối thiểu (Min):</label>
+            <input type="number" id="soil_min" min="0" max="100" value="40" oninput="updateSoilTarget()">
+            <br>
+            <label for="soil_max">Độ ẩm tối đa (Max):</label>
+            <input type="number" id="soil_max" min="0" max="100" value="60" oninput="updateSoilTarget()">
+            <p>Min: <span id="soil_min_value">40</span>% - Max: <span id="soil_max_value">60</span>%</p>
+        </div>
+
+        <div class="section">
+            <h2><i class="fas fa-cogs"></i> Chế độ tự động</h2>
+            <label class="switch">
+                <input type="checkbox" id="auto_switch" onchange="sendCommand('autoenable', this.checked ? 'ON' : 'OFF')">
+                <span class="slider"></span>
+            </label>
+        </div>
+
+        <div class="section">
+            <h2><i class="fas fa-search"></i> Dự đoán độ ẩm đất</h2>
+            <input type="number" id="temp_input" placeholder="Nhiệt độ (°C)" step="0.1">
+            <input type="number" id="pressure_input" placeholder="Áp suất (Pa)" step="0.1">
+            <input type="number" id="altitude_input" placeholder="Độ cao (m)" step="0.1">
+            <button onclick="predictMoisture()"><i class="fas fa-search"></i> Dự đoán</button>
+            <p id="predict_result">Kết quả dự đoán sẽ hiển thị ở đây</p>
+        </div>
+
+        <div class="section">
+            <h2><i class="fas fa-calendar-alt"></i> Lập lịch tưới</h2>
+            <input type="datetime-local" id="scheduled_time" required>
+            <input type="datetime-local" id="off_time" required>
+            <button onclick="scheduleIrrigation()"><i class="fas fa-clock"></i> Lập lịch</button>
+            <div id="schedules">Danh sách lịch tưới sẽ hiển thị ở đây</div>
+        </div>
+
+        <div class="section">
+            <h2><i class="fas fa-wifi"></i> Trạng thái kết nối</h2>
+            <p id="connection_status">Đang kiểm tra...</p>
+        </div>
+
+        <!-- Nút Đăng xuất ở cuối -->
+        <div class="section logout-section">
+            <button onclick="confirmLogout()">Đăng xuất</button>
+        </div>
+    </div>
+
+    <script>
+        let lastPumpState = null;
+
+        function confirmLogout() {
+            if (confirm("Bạn có chắc chắn muốn đăng xuất?")) {
+                window.location.href = "{{ url_for('logout') }}";
+            }
+        }
+
+        function updateSensorData() {
+            fetch('/sensor_data')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.error) {
+                        document.getElementById('temperature').textContent = 'Lỗi';
+                        document.getElementById('humidity').textContent = 'Lỗi';
+                        document.getElementById('soilmoisture').textContent = 'Lỗi';
+                    } else {
+                        document.getElementById('temperature').textContent = parseFloat(data.temperature).toFixed(1) + ' °C';
+                        document.getElementById('humidity').textContent = parseFloat(data.humidity).toFixed(1) + ' %';
+                        document.getElementById('soilmoisture').textContent = parseInt(data.soilmoisture) + ' %';
+                    }
+                })
+                .catch(error => console.error('Lỗi lấy dữ liệu cảm biến:', error));
+        }
+
+        function sendCommand(feed, value) {
+            fetch('/control', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+                body: `feed=${feed}&value=${value}`
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log(`Gửi ${value} tới ${feed}: ${data.success ? 'Thành công' : 'Thất bại'}`);
+            })
+            .catch(error => console.error('Lỗi gửi lệnh:', error));
+        }
+
+        function togglePump(isChecked) {
+            const newState = isChecked ? 'ON' : 'OFF';
+            if (newState !== lastPumpState) {
+                sendCommand('relaycontrol', newState);
+                lastPumpState = newState;
+            }
+        }
+
+        function syncPumpState() {
+            fetch('/pump_state')
+                .then(response => response.json())
+                .then(data => {
+                    const pumpSwitch = document.getElementById('pump_switch');
+                    const currentState = data.state === 'ON';
+                    if (currentState !== pumpSwitch.checked) {
+                        pumpSwitch.checked = currentState;
+                        lastPumpState = data.state;
+                    }
+                })
+                .catch(error => console.error('Lỗi đồng bộ trạng thái bơm:', error));
+        }
+
+        function updateSoilTarget() {
+            const min = document.getElementById('soil_min').value;
+            const max = document.getElementById('soil_max').value;
+            document.getElementById('soil_min_value').textContent = min;
+            document.getElementById('soil_max_value').textContent = max;
+            const value = `${min}-${max}`;
+            sendCommand('soilmoisturetarget', value);
+        }
+
+        function predictMoisture() {
+            const temp = document.getElementById('temp_input').value;
+            const pressure = document.getElementById('pressure_input').value;
+            const altitude = document.getElementById('altitude_input').value;
+            fetch('/predict', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+                body: `temperature=${temp}&pressure=${pressure}&altitude=${altitude}`
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    document.getElementById('predict_result').textContent = `Lỗi: ${data.error}`;
+                } else {
+                    document.getElementById('predict_result').textContent = 
+                        `Độ ẩm dự đoán: ${data.moisture.toFixed(2)} - ${data.result}`;
+                }
+            })
+            .catch(error => console.error('Lỗi dự đoán:', error));
+        }
+
+        function scheduleIrrigation() {
+            const scheduled_time = document.getElementById('scheduled_time').value;
+            const off_time = document.getElementById('off_time').value;
+            if (!scheduled_time || !off_time) {
+                console.error('Vui lòng nhập cả thời gian bật và tắt');
+                alert('Vui lòng nhập cả thời gian bật và tắt');
+                return;
+            }
+            fetch('/schedule', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+                body: `scheduled_time=${scheduled_time}&off_time=${off_time}`
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    console.log('Lập lịch thành công');
+                    updateSchedules();
+                } else {
+                    console.error('Lỗi lập lịch:', data.error);
+                    alert('Lỗi lập lịch: ' + data.error);
+                }
+            })
+            .catch(error => {
+                console.error('Lỗi gửi yêu cầu lập lịch:', error);
+                alert('Lỗi gửi yêu cầu lập lịch');
+            });
+        }
+
+        function deleteSchedule(id) {
+            fetch(`/delete_schedule/${id}`, {
+                method: 'DELETE'
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    console.log(`Đã xóa lịch với ID ${id}`);
+                    updateSchedules();
+                } else {
+                    console.error('Lỗi xóa lịch:', data.error);
+                    alert('Lỗi xóa lịch: ' + data.error);
+                }
+            })
+            .catch(error => {
+                console.error('Lỗi gửi yêu cầu xóa lịch:', error);
+                alert('Lỗi gửi yêu cầu xóa lịch');
+            });
+        }
+
+        function updateSchedules() {
+            fetch('/schedules')
+                .then(response => response.json())
+                .then(data => {
+                    let html = '<ul>';
+                    data.forEach(s => {
+                        html += `<li>Bật: ${s.scheduled_time} - Tắt: ${s.off_time} <button class="delete-btn" onclick="deleteSchedule(${s.id})">Xóa</button></li>`;
+                    });
+                    html += '</ul>';
+                    document.getElementById('schedules').innerHTML = html;
+                })
+                .catch(error => console.error('Lỗi lấy lịch:', error));
+        }
+
+        function checkConnection() {
+            fetch('/check_connection')
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('connection_status').textContent = 
+                        data.status === 'connected' ? `Đã kết nối: ${data.message}` : `Không kết nối: ${data.message}`;
+                })
+                .catch(error => console.error('Lỗi kiểm tra kết nối:', error));
+        }
+
+        setInterval(updateSensorData, 5000);
+        setInterval(updateSchedules, 5000);
+        setInterval(checkConnection, 5000);
+        setInterval(syncPumpState, 2000);
+        updateSensorData();
+        updateSchedules();
+        checkConnection();
+        syncPumpState();
+    </script>
+</body>
+</html>

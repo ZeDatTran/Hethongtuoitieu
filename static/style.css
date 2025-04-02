@@ -1,144 +1,290 @@
-body {
-    font-family: Arial, sans-serif;
-    margin: 0;
-    padding: 20px;
-    background: linear-gradient(45deg, #a8edea 0%, #fed6e3 100%);
-    min-height: 100vh;
-    display: flex;
-    justify-content: center;
+/* --- Biến CSS --- */
+:root {
+    --primary-color: #4CAF50; /* Xanh lá cây */
+    --secondary-color: #f4f4f4; /* Xám rất nhạt */
+    --text-color: #333;
+    --text-light: #666;
+    --border-color: #ddd;
+    --card-bg: #ffffff;
+    --shadow-color: rgba(0, 0, 0, 0.1);
+    --danger-color: #f44336; /* Đỏ */
+    --info-color: #2196F3; /* Xanh dương */
+    --warning-color: #ff9800; /* Cam */
+
+    --font-family: 'Poppins', sans-serif;
+    --border-radius: 8px;
+    --spacing-unit: 1rem; /* 16px by default */
 }
-h3 {
-    text-align: center;
-    color: #2c3e50;
-    font-size: 20px;
-  }
-  h1 {
-    text-align: center;
-    color: black;
-  }
-  /* Khu vực dashboard */
-  .dashboard {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: space-around;
-    gap: 20px;
-    margin-bottom: 30px;
-  }
-  
-  /* Thẻ thông tin */
-  .card {
-    flex: 1 1 200px;
-    background-color: #e8f5e9;
-    padding: 20px;
-    border-radius: 10px;
-    text-align: center;
-    transition: transform 0.2s;
-  }
-  
-  .card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
-  }
-  
-  .card h2 {
+
+/* --- Reset cơ bản & Body --- */
+* {
+    box-sizing: border-box;
     margin: 0;
-    font-size: 18px;
-    color: #388e3c;
-  }
-  
-  .card p {
-    font-size: 26px;
-    font-weight: bold;
-    color: #1a1a1a;
-    margin-top: 10px;
-  }
+    padding: 0;
+}
+
+body {
+    font-family: var(--font-family);
+    background-color: var(--secondary-color);
+    color: var(--text-color);
+    line-height: 1.6;
+    padding: var(--spacing-unit);
+}
 
 .container {
-    width: 100%;
     max-width: 1200px;
+    margin: 0 auto;
+    background-color: var(--card-bg);
+    padding: calc(var(--spacing-unit) * 1.5);
+    border-radius: var(--border-radius);
+    box-shadow: 0 5px 15px var(--shadow-color);
+}
+
+/* --- Header --- */
+.main-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: calc(var(--spacing-unit) * 2);
+    padding-bottom: var(--spacing-unit);
+    border-bottom: 1px solid var(--border-color);
+}
+
+.main-header h1 {
+    color: var(--primary-color);
+    font-weight: 600;
+    font-size: 1.8rem;
+    display: flex;
+    align-items: center;
+}
+
+.main-header h1 i {
+    margin-right: 0.5rem;
+}
+
+/* --- Dashboard Cảm biến --- */
+.dashboard {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: var(--spacing-unit);
+    margin-bottom: calc(var(--spacing-unit) * 2);
+}
+
+/* --- Card chung --- */
+.card {
+    background-color: var(--card-bg);
+    padding: calc(var(--spacing-unit) * 1.2);
+    border-radius: var(--border-radius);
+    box-shadow: 0 2px 5px var(--shadow-color);
+    transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+    overflow: hidden; /* Để đảm bảo border-radius hoạt động tốt */
+}
+
+.card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 12px var(--shadow-color);
+}
+
+/* --- Card Cảm biến --- */
+.sensor-card .card-header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 0.5rem;
+}
+
+.sensor-card h3 {
     margin: 0;
-    background: white;
-    padding: 20px;
-    border-radius: 10px;
-    box-shadow: 0 0 10px rgba(0,0,0,0.1);
-    box-sizing: border-box;
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--text-color);
 }
 
+.card-icon {
+    font-size: 1.5rem;
+    margin-right: 0.8rem;
+    padding: 0.5rem;
+    border-radius: 50%;
+    color: #fff;
+    width: 40px; /* Kích thước cố định */
+    height: 40px;
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.card-icon.temperature { background-color: var(--warning-color); }
+.card-icon.humidity { background-color: var(--info-color); }
+.card-icon.soil { background-color: #8d6e63; } /* Brown for soil */
+
+.sensor-value {
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: var(--text-color);
+    text-align: right;
+}
+
+/* --- Layout Chính (2 cột) --- */
+.main-content {
+    display: grid;
+    grid-template-columns: 1fr 1fr; /* Hai cột bằng nhau */
+    gap: calc(var(--spacing-unit) * 1.5);
+}
+
+/* --- Section chung --- */
 .section {
-    margin-bottom: 20px;
+    margin-bottom: 0; /* Bỏ margin bottom vì đã có gap */
 }
 
-h1, h2 {
-    color: #333;
+.section-title {
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: var(--primary-color);
+    margin-bottom: var(--spacing-unit);
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid var(--border-color);
+    display: flex;
+    align-items: center;
 }
 
-button {
-    padding: 10px 20px;
+.section-title i {
+    margin-right: 0.5rem;
+}
+
+/* --- Điều khiển (Công tắc, Input) --- */
+.control-item {
+    display: flex;
+    align-items: center;
+    margin-bottom: 0.8rem;
+}
+
+.switch-label {
+    margin-left: 0.8rem;
+    font-size: 0.95rem;
+}
+
+.input-group {
+    margin-bottom: var(--spacing-unit);
+    display: flex;
+    align-items: center;
+}
+
+.input-group label {
+    margin-right: 0.5rem;
+    min-width: 40px; /* Đảm bảo label thẳng hàng */
+    font-weight: 600;
+    font-size: 0.9rem;
+}
+
+input[type="number"],
+input[type="datetime-local"],
+input[type="text"],
+input[type="password"] /* Thêm cho login/register nếu có */
+{
+    width: 100%;
+    padding: 0.6rem 0.8rem;
+    border: 1px solid var(--border-color);
+    border-radius: calc(var(--border-radius) / 2);
+    font-family: var(--font-family);
+    font-size: 0.95rem;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+input[type="number"]:focus,
+input[type="datetime-local"]:focus,
+input[type="text"]:focus,
+input[type="password"]:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 2px rgba(76, 175, 80, 0.2);
+    outline: none;
+}
+
+.target-display {
+    font-weight: 600;
+    color: var(--text-light);
+    text-align: center;
+    margin-top: 0.5rem;
+}
+
+/* --- Nút Bấm --- */
+.btn, button {
+    display: inline-flex; /* Để icon và text căn giữa */
+    align-items: center;
+    justify-content: center;
+    padding: 0.7rem 1.2rem;
     margin: 5px;
-    background-color: #4CAF50;
+    background-color: var(--primary-color);
     color: white;
     border: none;
-    border-radius: 5px;
+    border-radius: calc(var(--border-radius) / 2);
     cursor: pointer;
+    font-family: var(--font-family);
+    font-size: 0.95rem;
+    font-weight: 600;
+    text-align: center;
+    transition: background-color 0.2s ease, transform 0.1s ease;
+    width: auto; /* Override width: 100% nếu có */
 }
 
-button:hover {
-    background-color: #45a049;
+.btn i, button i {
+    margin-right: 0.5rem;
 }
 
-button.delete-btn {
-    background-color: #ff4444;
-    padding: 5px 10px;
-    font-size: 12px;
+.btn:hover, button:hover {
+    background-color: #3e8e41; /* Darker green */
+    transform: translateY(-1px);
 }
 
-button.delete-btn:hover {
-    background-color: #cc0000;
+.btn:active, button:active {
+     transform: translateY(0px);
 }
 
-.logout-section button {
-    background-color: #ff4444; /* Màu đỏ cho nút Đăng xuất */
+/* Nút cụ thể */
+.btn-predict, .btn-schedule {
+    width: 100%; /* Full width trong card */
+    margin-top: 0.5rem;
 }
 
-.logout-section button:hover {
-    background-color: #cc0000;
+/* --- Nút Xóa & Đăng xuất --- */
+.delete-btn, .logout-button {
+    background-color: var(--danger-color);
+    padding: 0.3rem 0.6rem; /* Nhỏ hơn */
+    font-size: 0.8rem;
+}
+.delete-btn:hover, .logout-button:hover {
+    background-color: #c4302b; /* Darker red */
+}
+.delete-btn {
+    margin-left: auto; /* Đẩy nút xóa sang phải trong list item */
+    float: right; /* Hoặc dùng flexbox trên li */
+}
+.logout-button i {
+    margin-right: 0.3rem;
 }
 
-input[type="range"] {
-    width: 100%;
-}
-
+/* --- Công tắc (Switch) --- */
 .switch {
     position: relative;
     display: inline-block;
-    width: 60px;
-    height: 34px;
-    margin: 10px auto;
+    width: 50px; /* Nhỏ hơn */
+    height: 28px;
 }
 
-.switch input {
-    opacity: 0;
-    width: 0;
-    height: 0;
-}
+.switch input { opacity: 0; width: 0; height: 0; }
 
 .slider {
     position: absolute;
     cursor: pointer;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
+    top: 0; left: 0; right: 0; bottom: 0;
     background-color: #ccc;
     transition: .4s;
-    border-radius: 34px;
+    border-radius: 28px;
 }
 
 .slider:before {
     position: absolute;
     content: "";
-    height: 26px;
-    width: 26px;
+    height: 20px; /* Nhỏ hơn */
+    width: 20px;
     left: 4px;
     bottom: 4px;
     background-color: white;
@@ -146,30 +292,110 @@ input[type="range"] {
     border-radius: 50%;
 }
 
-input:checked + .slider {
-    background-color: #2196F3;
+input:checked + .slider { background-color: var(--primary-color); }
+input:focus + .slider { box-shadow: 0 0 1px var(--primary-color); }
+input:checked + .slider:before { transform: translateX(22px); } /* Điều chỉnh khoảng cách dịch chuyển */
+
+/* --- Danh sách Lịch --- */
+#schedules_list_container {
+    margin-top: var(--spacing-unit);
+}
+#schedules_list_container h3 {
+    font-size: 1rem;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+    color: var(--text-light);
+}
+#schedules {
+    list-style: none;
+    padding-left: 0;
+    max-height: 200px; /* Giới hạn chiều cao, thêm scroll */
+    overflow-y: auto;
+    border: 1px solid var(--border-color);
+    border-radius: calc(var(--border-radius) / 2);
+    padding: 0.5rem;
 }
 
-input:checked + .slider:before {
-    transform: translateX(26px);
+#schedules li {
+    padding: 0.6rem 0.8rem;
+    border-bottom: 1px dashed var(--border-color);
+    display: flex; /* Cho phép căn chỉnh nút xóa */
+    align-items: center;
+    font-size: 0.9rem;
+}
+#schedules li:last-child {
+    border-bottom: none;
+}
+#schedules li i.far.fa-clock {
+     margin-right: 0.5rem;
+     color: var(--text-light);
 }
 
-input[type="number"], input[type="datetime-local"] {
-    padding: 5px;
-    margin: 5px 0;
-    width: 100%;
-    box-sizing: border-box;
+/* --- Kết quả dự đoán --- */
+#predict_result {
+    margin-top: var(--spacing-unit);
+    padding: 0.8rem;
+    background-color: var(--secondary-color);
+    border-radius: calc(var(--border-radius) / 2);
+    font-size: 0.9rem;
+    text-align: center;
+    color: var(--text-light);
+    min-height: 40px; /* Đảm bảo có không gian ngay cả khi trống */
+    word-wrap: break-word;
 }
 
-p {
-    margin: 5px 0;
+/* --- Trạng thái kết nối --- */
+#connection_status {
+    font-weight: 600;
+    text-align: center;
+}
+#connection_status i {
+    margin-right: 0.3rem;
+}
+#connection_status small {
+     display: block;
+     font-size: 0.8rem;
+     color: var(--text-light);
+     margin-top: 0.2rem;
+}
+
+/* --- Responsive --- */
+@media (max-width: 992px) {
+    .main-content {
+        grid-template-columns: 1fr; /* Chuyển thành 1 cột trên tablet/mobile */
+    }
+    .dashboard {
+         grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    }
+    .main-header {
+         flex-direction: column;
+         align-items: flex-start;
+    }
+    .main-header h1 {
+        margin-bottom: 0.5rem;
+    }
+    .logout-button {
+        align-self: flex-end; /* Đặt nút logout ở cuối bên phải khi header xếp chồng */
+    }
 }
 
 @media (max-width: 600px) {
-    .container {
-        padding: 10px;
-    }
-    button, input[type="number"], input[type="datetime-local"] {
-        width: 100%;
-    }
+     body {
+         padding: calc(var(--spacing-unit) / 2);
+     }
+     .container {
+         padding: var(--spacing-unit);
+     }
+     .dashboard {
+        grid-template-columns: 1fr 1fr; /* 2 cột trên điện thoại nhỏ */
+     }
+     .sensor-card .card-header {
+         flex-direction: column;
+         align-items: center;
+         text-align: center;
+     }
+     .card-icon { margin-right: 0; margin-bottom: 0.3rem; }
+     .sensor-value { font-size: 1.5rem; text-align: center; }
+     .main-header h1 { font-size: 1.5rem; }
+     .btn, button { font-size: 0.9rem; padding: 0.6rem 1rem; }
 }
