@@ -82,49 +82,6 @@ python app.py
 ```
 2. Truy cập giao diện web tại: `http://localhost:5000/login`
 
-### API Endpoints
-
-#### Authentication
-- **POST** `/register` - Đăng ký tài khoản người dùng.
-- **GET** `/create-admin/<secret>` - Đăng ký tài khoản quản trị viên (yêu cầu mã xác thực).
-- **POST** `/login` - Đăng nhập.
-- **GET** `/logout` - Đăng xuất.
-
-#### Quản Lý Cảm Biến và Điều Khiển
-- **GET** `/sensor_data` - Lấy dữ liệu cảm biến (nhiệt độ, độ ẩm không khí, độ ẩm đất).
-- **POST** `/control` - Điều khiển bơm hoặc chế độ tự động.
-- **GET** `/pump_state` - Lấy trạng thái bơm.
-- **GET** `/auto_state` - Lấy trạng thái chế độ tự động.
-- **POST** `/update_soil_target` - Cập nhật mục tiêu độ ẩm đất.
-- **GET** `/sensor_history` - Xem lịch sử dữ liệu cảm biến.
-
-#### Lập Lịch Tưới
-- **POST** `/schedule` - Tạo lịch tưới mới.
-- **GET** `/schedules` - Xem danh sách lịch tưới.
-- **DELETE** `/delete_schedule/<id>` - Xóa lịch tưới.
-
-#### Dự Đoán Lượng Nước
-- **POST** `/predict` - Dự đoán lượng nước cần tưới.
-
-#### Quản Lý Người Dùng (Admin)
-- **GET** `/admin/users` - Lấy danh sách người dùng.
-- **GET** `/admin/user/<id>` - Xem chi tiết người dùng.
-- **POST** `/admin/user/<id>` - Cập nhật thông tin người dùng.
-- **DELETE** `/admin/user/<id>` - Xóa người dùng.
-- **GET** `/admin/sensor_data/<user_id>` - Xem dữ liệu cảm biến của người dùng.
-
-### Bảo Mật
-- Mật khẩu được mã hóa bằng Bcrypt.
-- Phân quyền người dùng (user/admin).
-- Kiểm tra quyền truy cập cho các endpoint admin.
-- Mã xác thực đặc biệt cho đăng ký quản trị viên.
-
-### Đóng Góp
-1. Fork repository.
-2. Tạo branch mới: `git checkout -b feature/new-feature`.
-3. Commit thay đổi: `git commit -m 'Add new feature'`.
-4. Push lên branch: `git push origin feature/new-feature`.
-5. Tạo Pull Request.
 
 ### Giấy Phép
 Dự án được phát triển bởi **Trần Hoàng Phúc Đạt **.  
