@@ -1,9 +1,9 @@
-Hệ Thống Tưới Tiêu Thông Minh
+#Hệ Thống Tưới Tiêu Thông Minh
 Hệ thống quản lý và tự động hóa tưới tiêu thông minh, tích hợp IoT và học máy để tối ưu hóa việc tưới tiêu dựa trên dữ liệu cảm biến.
-Tính Năng
-Cho Người Dùng Thường
+##Tính Năng
+###Cho Người Dùng Thường
 
-Đăng ký tài khoản.
+###Đăng ký tài khoản.
 Đăng nhập vào hệ thống.
 Theo dõi dữ liệu cảm biến (nhiệt độ, độ ẩm không khí, độ ẩm đất) theo thời gian thực.
 Điều khiển bơm nước (bật/tắt thủ công hoặc tự động).
