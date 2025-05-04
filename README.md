@@ -1,6 +1,3 @@
-Tôi hiểu rằng khi bạn sao chép nội dung `README` từ lần trước, các dấu Markdown như `#` (tiêu đề) và ``` (code block) không được giữ nguyên, có thể do định dạng hiển thị trên giao diện hoặc cách sao chép. Để đảm bảo các dấu này được giữ nguyên, tôi sẽ viết lại nội dung `README` trực tiếp và đảm bảo các ký tự Markdown được hiển thị rõ ràng trong văn bản thuần túy. Dưới đây là nội dung hoàn chỉnh của `README` cho "Hệ Thống Tưới Tiêu Thông Minh" với các dấu `#` và ``` được giữ nguyên.
-
----
 
 ## Hệ Thống Tưới Tiêu Thông Minh
 
